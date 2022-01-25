@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:p="http://primefaces.org/ui">
+<h:head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<title>CRUD Tarefa</title>
+</h:head>
+<h:body>
+
+	<div
+		style="display: flex; align-items: center; justify-content: center;">
+		<h:form id="tarefa">
+			<p:growl id="growl" sticky="true" />
+			<p:panelGrid columns="2" style="width:500px;justify-content:center;">
+				<f:facet name="header">
+       				Cadastro de Tarefa
+   				</f:facet>
+				<h:outputLabel for="titulo">Titulo:</h:outputLabel>
+				<p:inputText required="true" requiredMessage="Informe Titulo"
+					id="titulo" value="#{mBTarefa.tarefa.titulo}" />
+				<h:outputLabel for="descricao">Descrição:</h:outputLabel>
+				<p:inputTextarea required="true" requiredMessage="Informe Descrição"
+					id="descricao" value="#{mBTarefa.tarefa.descricao}" />
+				<h:outputLabel for="prioridade">Prioridade:</h:outputLabel>
+				<h:selectOneMenu id="prioridade"
+					value="#{mBTarefa.tarefa.prioridade}">
+					<f:selectItems value="#{mBTarefa.prioridades}"
+						var="prioridadeTarefa" itemValue="#{prioridadeTarefa}"
+						itemLabel="#{prioridadeTarefa.descricao}" />
+				</h:selectOneMenu>
+				<h:outputLabel for="responsavel">Responsável:</h:outputLabel>
+				<h:selectOneMenu id="responsavel"
+					value="#{mBTarefa.tarefa.responsabilidade}">
+					<f:selectItems value="#{mBTarefa.responsabilidades}"
+						var="responsabilidadeTarefa" itemValue="#{responsabilidadeTarefa}"
+						itemLabel="#{responsabilidadeTarefa.descricao}" />
+				</h:selectOneMenu>
+				<h:outputLabel>Data:</h:outputLabel>
+				<p:calendar required="true" requiredMessage="Informe Data"
+					value="#{mBTarefa.tarefa.deadline}" mode="popup" showOn="button" />
+				<f:facet name="footer">
+					<p:commandButton rendered="#{not mBTarefa.editando}" ajax="true"
+						update="growl tarefa tarefas" action="#{mBTarefa.salvar}"
+						value="Salvar Tarefa" />
+					<p:commandButton rendered="#{mBTarefa.editando eq true}" ajax="true"
+						update="growl tarefa tarefas" action="#{mBTarefa.atualizar}"
+						value="Editar Tarefa" />
+				</f:facet>
+			</p:panelGrid>
+		</h:form>
+	</div>
+	<div
+		style="margin-top: 20px; display: flex-inline; align-items: center; justify-content: center;">
+		<h:form id="tarefas">
+			<p:growl id="growl" sticky="true" />
+			<p:dataTable id="listaTarefas" var="tarefa"
+				value="#{mBTarefa.tarefas}" emptyMessage="Sem Tarefas"
+				paginator="true" rows="5"
+				paginatorTemplate="{FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink}"
+				paginatorPosition="bottom">
+				<f:facet name="header">
+       			Lista de Tarefas
+    		</f:facet>
+				<p:column headerText="Id" filterBy="#{tarefa.id}"
+					filterMatchMode="contains">
+					<h:outputText value="#{tarefa.id}" />
+				</p:column>
+
+				<p:column headerText="Titulo" filterBy="#{tarefa.titulo}"
+					filterMatchMode="contains">
+					<h:outputText value="#{tarefa.titulo}" />
+				</p:column>
+
+				<p:column headerText="Descrição" filterBy="#{tarefa.descricao}"
+					filterMatchMode="contains">
+					<h:outputText value="#{tarefa.descricao}" />
+				</p:column>
+
+				<p:column headerText="Responsavel">
+					<h:outputText value="#{tarefa.responsabilidade.descricao}" />
+				</p:column>
+
+				<p:column headerText="Prioridade">
+					<h:outputText id="prioridadeInput"
+						value="#{tarefa.prioridade.descricao}" />
+				</p:column>
+
+				<p:column headerText="Situação" filterBy="#{tarefa.situacao}"
+					filterMatchMode="exact">
+					<f:facet name="filter">
+						<p:selectOneMenu id="menuSituacao" value="#{mBTarefa.situacao}"
+							style="width: 80% !important">
+							<f:selectItem itemLabel="- - - - -" itemValue="#{null}"
+								noSelectionOption="true" />
+							<f:selectItems value="#{mBTarefa.situacaos}" var="situacaoTarefa"
+								itemValue="#{situacaoTarefa}"
+								itemLabel="#{situacaoTarefa.descricao}" />
+							<p:ajax listener="#{mBTarefa.mudancaSituacao}"
+								process="listaTarefas menuSituacao" update="listaTarefas" />
+						</p:selectOneMenu>
+					</f:facet>
+					<h:outputText id="situacaoInput"
+						value="#{tarefa.situacao.descricao}" />
+				</p:column>
+
+				<p:column headerText="DeadLine">
+					<h:outputText value="#{tarefa.deadline}">
+						<f:convertDateTime pattern="dd/MM/yyyy" />
+					</h:outputText>
+				</p:column>
+
+				<p:column headerText="Ações">
+					<p:commandLink update="listaTarefas" value="Editar"
+						action="#{mBTarefa.buscarTarefaPorId(tarefa)}">
+						<p:ajax execute="@all" render="@all" update="tarefa" process="@this"/>
+					</p:commandLink> |
+				<p:commandLink update="listaTarefas" value="Deletar"
+						action="#{mBTarefa.deleta(tarefa)}">
+						<f:ajax execute="@form" render="@form" />
+					</p:commandLink> |
+				<p:commandLink update="listaTarefas" value="Concluir"
+						action="#{mBTarefa.concluirTarefa(tarefa)}">
+						<f:ajax execute="@form" render="@form" />
+					</p:commandLink>
+				</p:column>
+			</p:dataTable>
+		</h:form>
+	</div>
+</h:body>
+</html>
